@@ -1,0 +1,7 @@
+modelo30.db
+*.db
+*.csv
+fornecedores_export.json
+__pycache__/
+*.pyc
+.env
