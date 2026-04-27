@@ -307,6 +307,8 @@ def paises():
 # ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import os
+    os.environ["FLASK_SKIP_DOTENV"] = "1"
     init_db()
     seed_fornecedores()
     print("\n  Modelo 30 a correr em → http://localhost:5050\n")
