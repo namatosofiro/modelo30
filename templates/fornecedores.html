@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Fornecedores{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h4 class="fw-bold mb-0" style="color:#1a1f2e">Fornecedores</h4>
+    <small class="text-muted">{{ fornecedores|length }} entidades não residentes registadas</small>
+  </div>
+  <a href="{{ url_for('novo_fornecedor') }}" class="btn btn-primary btn-sm px-3">
+    <i class="fa-solid fa-plus me-1"></i> Adicionar Fornecedor
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header py-3 d-flex flex-wrap gap-2 align-items-center">
+    <!-- Filtros rápidos por país -->
+    <div class="d-flex gap-1 flex-wrap">
+      <button class="btn btn-sm btn-outline-secondary filter-btn active" data-country="">Todos</button>
+      {% for cod in paises_usados %}
+      <button class="btn btn-sm btn-outline-secondary filter-btn" data-country="{{ cod }}">{{ cod }}</button>
+      {% endfor %}
+    </div>
+    <div class="ms-auto">
+      <select id="catFilter" class="form-select form-select-sm" style="min-width:170px">
+        <option value="">Todas as categorias</option>
+        {% for cat in categorias %}
+        <option>{{ cat }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="p-3 pb-0">
+      <table id="tblForn" class="table table-hover align-middle w-100">
+        <thead>
+          <tr>
+            <th>Nome Fiscal</th>
+            <th>Produto / Serviço</th>
+            <th>País</th>
+            <th>NIF País</th>
+            <th>Tipo</th>
+            <th>Taxa CDT</th>
+            <th>Categoria</th>
+            <th style="width:90px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in fornecedores %}
+          <tr data-country="{{ f.pais_codigo }}" data-cat="{{ f.categoria or '' }}">
+            <td class="fw-semibold" style="max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="{{ f.nome }}">{{ f.nome }}</td>
+            <td style="color:#64748b">{{ f.nome_comercial or '—' }}</td>
+            <td><span class="badge-country">{{ f.pais_codigo }}</span> <small class="text-muted">{{ paises.get(f.pais_codigo, '') }}</small></td>
+            <td style="font-family:monospace; font-size:.78rem; color:#475569">{{ f.nif_pais or '—' }}</td>
+            <td>
+              <span class="badge-tipo" title="{{ tipos.get(f.tipo_rendimento, '') }}">{{ f.tipo_rendimento }}</span>
+            </td>
+            <td class="fw-semibold {% if f.taxa_cdt == 0 %}text-success{% else %}text-warning{% endif %}">
+              {{ f.taxa_cdt }}%
+            </td>
+            <td><span class="badge-cat">{{ f.categoria or '—' }}</span></td>
+            <td>
+              <a href="{{ url_for('editar_fornecedor', fid=f.id) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Editar">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </a>
+              <button class="btn btn-sm btn-outline-danger py-0 px-2 ms-1 btn-del" data-id="{{ f.id }}" data-nome="{{ f.nome }}" title="Remover">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmar delete -->
+<div class="modal fade" id="modalDel" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-bold">Remover Fornecedor</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0" style="font-size:.85rem">Remover <strong id="delNome"></strong>?<br>
+        <small class="text-muted">O fornecedor ficará inactivo (pagamentos preservados).</small></p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form id="formDel" method="POST" class="d-inline">
+          <button class="btn btn-sm btn-danger">Remover</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const table = $('#tblForn').DataTable({
+  pageLength: 25,
+  language: {
+    search: '', searchPlaceholder: 'Pesquisar…',
+    lengthMenu: 'Mostrar _MENU_', info: '_START_–_END_ de _TOTAL_',
+    paginate: { previous: '‹', next: '›' }
+  },
+  columnDefs: [{ orderable: false, targets: 7 }]
+});
+
+// Filtro por país
+$('.filter-btn').on('click', function() {
+  $('.filter-btn').removeClass('active');
+  $(this).addClass('active');
+  const country = $(this).data('country');
+  table.column(2).search(country ? '^' + country + ' ' : '', true, false).draw();
+});
+
+// Filtro por categoria
+$('#catFilter').on('change', function() {
+  table.column(6).search(this.value).draw();
+});
+
+// Delete modal
+document.querySelectorAll('.btn-del').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('delNome').textContent = btn.dataset.nome;
+    document.getElementById('formDel').action = '/fornecedor/' + btn.dataset.id + '/remover';
+    new bootstrap.Modal(document.getElementById('modalDel')).show();
+  });
+});
+</script>
+{% endblock %}

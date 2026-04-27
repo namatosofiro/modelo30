@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h4 class="fw-bold mb-0" style="color:#1a1f2e">Dashboard</h4>
+    <small class="text-muted">Modelo 30 — Declaração de rendimentos pagos a não residentes</small>
+  </div>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#eff6ff">
+        <i class="fa-solid fa-building" style="color:#3b82f6"></i>
+      </div>
+      <div>
+        <div class="stat-label">Fornecedores</div>
+        <div class="stat-value">{{ stats.total_forn }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#f0fdf4">
+        <i class="fa-solid fa-money-bill-transfer" style="color:#22c55e"></i>
+      </div>
+      <div>
+        <div class="stat-label">Pagamentos Registados</div>
+        <div class="stat-value">{{ stats.total_pag }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#fef3c7">
+        <i class="fa-solid fa-euro-sign" style="color:#d97706"></i>
+      </div>
+      <div>
+        <div class="stat-label">Total Bruto {{ ano_atual }}</div>
+        <div class="stat-value" style="font-size:1.4rem">{{ "%.0f"|format(stats.total_bruto) }}€</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#fdf2f8">
+        <i class="fa-solid fa-percent" style="color:#a855f7"></i>
+      </div>
+      <div>
+        <div class="stat-label">Retenção {{ ano_atual }}</div>
+        <div class="stat-value" style="font-size:1.4rem">{{ "%.0f"|format(stats.total_ret) }}€</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Top categorias -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold" style="font-size:.9rem">Fornecedores por Categoria</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th class="ps-3">Categoria</th><th class="text-end pe-3">Nº</th></tr></thead>
+          <tbody>
+            {% for cat, n in stats.por_categoria %}
+            <tr>
+              <td class="ps-3"><span class="badge-cat">{{ cat or '—' }}</span></td>
+              <td class="text-end pe-3 fw-semibold">{{ n }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top países -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold" style="font-size:.9rem">Fornecedores por País</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th class="ps-3">País</th><th>Código</th><th class="text-end pe-3">Nº</th></tr></thead>
+          <tbody>
+            {% for pais_cod, pais_nome, n in stats.por_pais %}
+            <tr>
+              <td class="ps-3">{{ pais_nome }}</td>
+              <td><span class="badge-country">{{ pais_cod }}</span></td>
+              <td class="text-end pe-3 fw-semibold">{{ n }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

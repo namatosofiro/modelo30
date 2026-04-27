@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Exportar Modelo 30{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h4 class="fw-bold mb-0" style="color:#1a1f2e">Exportar Modelo 30</h4>
+  <small class="text-muted">Gera CSV para submissão na AT — Portal das Finanças</small>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header py-3">
+        <span class="fw-semibold" style="font-size:.9rem"><i class="fa-solid fa-file-csv me-2 text-success"></i>Exportar por Período</span>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Ano *</label>
+              <input name="ano" type="number" class="form-control" value="{{ ano_atual }}" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Mês</label>
+              <select name="mes" class="form-select">
+                <option value="">Todos</option>
+                {% for m, mn in meses %}
+                <option value="{{ m }}">{{ mn }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-success w-100">
+                <i class="fa-solid fa-download me-1"></i> Descarregar CSV
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header py-3">
+        <span class="fw-semibold" style="font-size:.9rem"><i class="fa-solid fa-database me-2 text-primary"></i>Exportar Base de Dados</span>
+      </div>
+      <div class="card-body">
+        <p style="font-size:.83rem; color:#64748b">Exporta todos os fornecedores activos em formato JSON.</p>
+        <a href="{{ url_for('exportar_json') }}" class="btn btn-outline-primary w-100">
+          <i class="fa-solid fa-file-code me-1"></i> Exportar Fornecedores JSON
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header py-3">
+        <span class="fw-semibold" style="font-size:.9rem"><i class="fa-solid fa-circle-info me-2 text-primary"></i>Campos do CSV — Modelo 30 AT</span>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <thead><tr><th>Campo</th><th>Descrição</th><th>Fonte</th></tr></thead>
+          <tbody style="font-size:.82rem">
+            <tr><td><code>Campo 31</code></td><td>NIF do beneficiário em Portugal</td><td>Fornecedor</td></tr>
+            <tr><td><code>Campo 32</code></td><td>NIF no país de residência</td><td>Fornecedor</td></tr>
+            <tr><td><code>Campo 33</code></td><td>Código ISO do país de residência</td><td>Fornecedor</td></tr>
+            <tr><td><code>Campo 34</code></td><td>% de participação</td><td>Fornecedor</td></tr>
+            <tr><td><code>Campo 35</code></td><td>Valor bruto + tipo de rendimento</td><td>Pagamento</td></tr>
+            <tr><td><code>Campo 36</code></td><td>Taxa de tributação aplicada</td><td>Pagamento</td></tr>
+            <tr><td><code>Campo 37</code></td><td>Valor da retenção na fonte</td><td>Calculado</td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-info py-2 mb-0" style="font-size:.8rem">
+          <i class="fa-solid fa-lightbulb me-1"></i>
+          <strong>Prazo:</strong> até ao final do 2.º mês seguinte ao do pagamento/colocação à disposição.
+          Submissão em <strong>e-fatura.irs.gov.pt</strong> ou <strong>Portal das Finanças → Serviços → Entregar → Modelo 30</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

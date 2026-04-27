@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Países / CDT{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h4 class="fw-bold mb-0" style="color:#1a1f2e">Países &amp; Convenções CDT</h4>
+  <small class="text-muted">Convenções para Evitar Dupla Tributação com Portugal</small>
+</div>
+
+<div class="card">
+  <div class="card-body p-0 p-md-3">
+    <table id="tblPaises" class="table table-hover w-100" style="font-size:.84rem">
+      <thead>
+        <tr>
+          <th>Código ISO</th>
+          <th>País</th>
+          <th>CDT com Portugal</th>
+          <th>Fornecedores na BD</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cod, nome, tem_cdt, n_forn in paises_info %}
+        <tr>
+          <td><span class="badge-country">{{ cod }}</span></td>
+          <td class="fw-semibold">{{ nome }}</td>
+          <td>
+            {% if tem_cdt %}
+              <span class="badge bg-success bg-opacity-10 text-success" style="font-size:.75rem">
+                <i class="fa-solid fa-check me-1"></i>CDT em vigor
+              </span>
+            {% else %}
+              <span class="badge bg-secondary bg-opacity-10 text-secondary" style="font-size:.75rem">
+                Sem CDT
+              </span>
+            {% endif %}
+          </td>
+          <td>
+            {% if n_forn > 0 %}
+              <a href="{{ url_for('fornecedores') }}?pais={{ cod }}" class="text-primary fw-semibold">{{ n_forn }}</a>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$('#tblPaises').DataTable({
+  pageLength: 50,
+  language: {
+    search: '', searchPlaceholder: 'Pesquisar país…',
+    lengthMenu: 'Mostrar _MENU_', info: '_START_–_END_ de _TOTAL_',
+    paginate: { previous: '‹', next: '›' }
+  }
+});
+</script>
+{% endblock %}

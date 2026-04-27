@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if forn else 'Novo' }} Fornecedor{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{{ url_for('fornecedores') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="fa-solid fa-arrow-left"></i>
+  </a>
+  <div>
+    <h4 class="fw-bold mb-0" style="color:#1a1f2e">
+      {{ 'Editar Fornecedor' if forn else 'Novo Fornecedor' }}
+    </h4>
+    {% if forn %}<small class="text-muted">ID {{ forn.id }} — {{ forn.nome }}</small>{% endif %}
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <form method="POST">
+      <div class="card mb-3">
+        <div class="card-header py-3">
+          <span class="fw-semibold" style="font-size:.9rem"><i class="fa-solid fa-building me-2 text-primary"></i>Identificação da Entidade</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Nome Fiscal Completo *</label>
+              <input name="nome" class="form-control" required placeholder="Ex: Google Ireland Limited"
+                     value="{{ forn.nome if forn else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nome Comercial / Produto</label>
+              <input name="nome_comercial" class="form-control" placeholder="Ex: Google Ads"
+                     value="{{ forn.nome_comercial if forn else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Categoria</label>
+              <input name="categoria" class="form-control" list="lista-categorias" placeholder="Ex: Cloud, IA, Pagamentos…"
+                     value="{{ forn.categoria if forn else '' }}">
+              <datalist id="lista-categorias">
+                {% for cat in categorias %}
+                <option value="{{ cat }}">
+                {% endfor %}
+              </datalist>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header py-3">
+          <span class="fw-semibold" style="font-size:.9rem"><i class="fa-solid fa-id-card me-2 text-primary"></i>Identificação Fiscal (Campos 31–33)</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">NIF Portugal (campo 31)</label>
+              <input name="nif_pt" class="form-control" placeholder="Opcional"
+                     value="{{ forn.nif_pt if forn else '' }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">NIF no País Residência (campo 32)</label>
+              <input name="nif_pais" class="form-control" placeholder="Ex: IE6388047V"
+                     value="{{ forn.nif_pais if forn else '' }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">País Residência (campo 33) *</label>
+              <select name="pais_codigo" class="form-select" required>
+                {% for cod, nome in paises.items() | sort(attribute='1') %}
+                <option value="{{ cod }}" {{ 'selected' if forn and forn.pais_codigo == cod else '' }}>
+                  {{ cod }} — {{ nome }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header py-3">
+          <span class="fw-semibold" style="font-size:.9rem"><i class="fa-solid fa-percent me-2 text-primary"></i>Tributação (Campos 34–36)</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Tipo de Rendimento *</label>
+              <select name="tipo_rendimento" class="form-select" required>
+                {% for cod, desc in tipos.items() %}
+                <option value="{{ cod }}" {{ 'selected' if forn and forn.tipo_rendimento == cod else '' }}>
+                  {{ cod }} — {{ desc[:40] }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Taxa CDT %</label>
+              <div class="input-group">
+                <input name="taxa_cdt" type="number" step="0.01" min="0" max="100" class="form-control"
+                       value="{{ forn.taxa_cdt if forn else '0' }}">
+                <span class="input-group-text">%</span>
+              </div>
+              <small class="text-muted" style="font-size:.72rem">0% = isento por CDT</small>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Taxa Doméstica %</label>
+              <div class="input-group">
+                <input name="taxa_domestica" type="number" step="0.01" min="0" max="100" class="form-control"
+                       value="{{ forn.taxa_domestica if forn else '25' }}">
+                <span class="input-group-text">%</span>
+              </div>
+              <small class="text-muted" style="font-size:.72rem">Sem convenção aplicável</small>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">% Participação (campo 34)</label>
+              <div class="input-group">
+                <input name="percentagem_participacao" type="number" step="0.01" min="0" max="100" class="form-control"
+                       value="{{ forn.percentagem_participacao if forn else '0' }}">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notas internas</label>
+              <textarea name="notas" class="form-control" rows="2" placeholder="Observações, número de contrato, etc.">{{ forn.notas if forn else '' }}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <a href="{{ url_for('fornecedores') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary px-4">
+          <i class="fa-solid fa-floppy-disk me-1"></i>
+          {{ 'Guardar Alterações' if forn else 'Adicionar Fornecedor' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

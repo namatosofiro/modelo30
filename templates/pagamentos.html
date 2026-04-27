@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Pagamentos{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h4 class="fw-bold mb-0" style="color:#1a1f2e">Pagamentos</h4>
+    <small class="text-muted">Registo de rendimentos pagos a entidades não residentes</small>
+  </div>
+  <button class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalPag">
+    <i class="fa-solid fa-plus me-1"></i> Registar Pagamento
+  </button>
+</div>
+
+<!-- Filtro período -->
+<div class="card mb-4">
+  <div class="card-body py-2">
+    <form method="GET" class="d-flex gap-3 align-items-center flex-wrap">
+      <label class="form-label mb-0 fw-semibold" style="font-size:.83rem">Período:</label>
+      <select name="ano" class="form-select form-select-sm" style="width:100px">
+        {% for a in anos %}
+        <option {{ 'selected' if a == ano_sel }}>{{ a }}</option>
+        {% endfor %}
+      </select>
+      <select name="mes" class="form-select form-select-sm" style="width:130px">
+        <option value="">Todos os meses</option>
+        {% for m, mn in meses %}
+        <option value="{{ m }}" {{ 'selected' if m == mes_sel }}>{{ mn }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm btn-outline-primary">Filtrar</button>
+      {% if pagamentos %}
+      <a href="{{ url_for('exportar_direto', ano=ano_sel, mes=mes_sel or '') }}" class="btn btn-sm btn-outline-success ms-auto">
+        <i class="fa-solid fa-file-csv me-1"></i> Exportar CSV
+      </a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+{% if pagamentos %}
+<!-- Resumo -->
+<div class="row g-3 mb-3">
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-label">Registos</div>
+      <div class="stat-value" style="font-size:1.5rem">{{ pagamentos|length }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-label">Total Bruto</div>
+      <div class="stat-value" style="font-size:1.5rem">{{ "%.2f"|format(total_bruto) }}€</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="stat-label">Total Retenção</div>
+      <div class="stat-value" style="font-size:1.5rem; color:#dc2626">{{ "%.2f"|format(total_ret) }}€</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0 p-md-3">
+    <table id="tblPag" class="table table-hover align-middle w-100">
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th>Fornecedor</th>
+          <th>País</th>
+          <th>Tipo</th>
+          <th class="text-end">Valor Bruto</th>
+          <th class="text-end">Taxa</th>
+          <th class="text-end">Retenção</th>
+          <th>Regime</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pagamentos %}
+        <tr>
+          <td class="fw-semibold">{{ '%02d'|format(p.mes) }}/{{ p.ano }}</td>
+          <td>
+            <div class="fw-semibold" style="font-size:.83rem">{{ p.nome_comercial or p.nome }}</div>
+            <div class="text-muted" style="font-size:.72rem">{{ p.nome }}</div>
+          </td>
+          <td><span class="badge-country">{{ p.pais_codigo }}</span></td>
+          <td><span class="badge-tipo">{{ p.tipo_rendimento }}</span></td>
+          <td class="text-end fw-semibold">{{ "%.2f"|format(p.valor_bruto) }}€</td>
+          <td class="text-end">{{ p.taxa_aplicada }}%</td>
+          <td class="text-end fw-bold {% if p.retencao > 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ "%.2f"|format(p.retencao) }}€
+          </td>
+          <td><span class="badge {{ 'bg-info' if p.regime == 'CDT' else 'bg-secondary' }} bg-opacity-10 text-dark" style="font-size:.72rem">{{ p.regime }}</span></td>
+          <td style="font-size:.78rem; color:#64748b">{{ p.notas or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="fa-solid fa-inbox fa-2x text-muted mb-3"></i>
+    <p class="text-muted mb-0">Sem pagamentos registados para o período seleccionado.</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal novo pagamento -->
+<div class="modal fade" id="modalPag" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Registar Pagamento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Fornecedor *</label>
+              <select name="fornecedor_id" class="form-select" required id="selForn">
+                <option value="">— Seleccionar —</option>
+                {% for f in todos_fornecedores %}
+                <option value="{{ f.id }}" data-cdt="{{ f.taxa_cdt }}" data-dom="{{ f.taxa_domestica }}">
+                  {{ f.nome }}{% if f.nome_comercial %} ({{ f.nome_comercial }}){% endif %} — {{ f.pais_codigo }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Ano *</label>
+              <input name="ano" type="number" class="form-control" value="{{ ano_atual }}" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Mês *</label>
+              <select name="mes" class="form-select" required>
+                {% for m, mn in meses %}
+                <option value="{{ m }}" {{ 'selected' if m == mes_atual }}>{{ mn }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Valor Bruto (EUR) *</label>
+              <div class="input-group">
+                <input name="valor_bruto" type="number" step="0.01" min="0" class="form-control" id="inputVB" required placeholder="0.00">
+                <span class="input-group-text">€</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Regime</label>
+              <select name="regime" class="form-select" id="selRegime">
+                <option value="CDT">CDT — Convenção Dupla Tributação</option>
+                <option value="DOM">DOM — Taxa Doméstica</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Taxa a Aplicar %</label>
+              <div class="input-group">
+                <input name="taxa_aplicada" type="number" step="0.01" min="0" max="100" class="form-control" id="inputTaxa" value="0">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Retenção Calculada</label>
+              <div class="input-group">
+                <input type="text" class="form-control bg-light" id="retCalc" readonly value="0.00">
+                <span class="input-group-text">€</span>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Notas</label>
+              <input name="notas" class="form-control" placeholder="Número de factura, referência…">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="fa-solid fa-floppy-disk me-1"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$('#tblPag').DataTable({
+  pageLength: 25,
+  order: [[0, 'desc']],
+  language: {
+    search: '', searchPlaceholder: 'Pesquisar…',
+    lengthMenu: 'Mostrar _MENU_', info: '_START_–_END_ de _TOTAL_',
+    paginate: { previous: '‹', next: '›' }
+  }
+});
+
+// Auto-fill taxa quando muda fornecedor ou regime
+function updateTaxa() {
+  const opt = document.querySelector('#selForn option:checked');
+  const regime = document.getElementById('selRegime').value;
+  if (!opt || !opt.value) return;
+  const taxa = regime === 'CDT' ? opt.dataset.cdt : opt.dataset.dom;
+  document.getElementById('inputTaxa').value = taxa;
+  updateRetencao();
+}
+function updateRetencao() {
+  const vb = parseFloat(document.getElementById('inputVB').value) || 0;
+  const taxa = parseFloat(document.getElementById('inputTaxa').value) || 0;
+  document.getElementById('retCalc').value = (vb * taxa / 100).toFixed(2);
+}
+document.getElementById('selForn').addEventListener('change', updateTaxa);
+document.getElementById('selRegime').addEventListener('change', updateTaxa);
+document.getElementById('inputVB').addEventListener('input', updateRetencao);
+document.getElementById('inputTaxa').addEventListener('input', updateRetencao);
+</script>
+{% endblock %}
